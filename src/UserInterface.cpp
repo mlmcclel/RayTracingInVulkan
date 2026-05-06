@@ -200,6 +200,7 @@ void UserInterface::DrawSettings()
 		ImGui::Separator();
 		ImGui::Checkbox("Enable ray tracing", &Settings().IsRayTraced);
 		ImGui::Checkbox("Accumulate rays between frames", &Settings().AccumulateRays);
+		ImGui::Checkbox("Enable Intel OpenImage Denoise", &Settings().IsDenoised);
 		uint32_t min = 1, max = 128;
 		ImGui::SliderScalar("Samples", ImGuiDataType_U32, &Settings().NumberOfSamples, &min, &max);
 		min = 1, max = 32;
@@ -211,6 +212,7 @@ void UserInterface::DrawSettings()
 		ImGui::SliderFloat("FoV", &Settings().FieldOfView, UserSettings::FieldOfViewMinValue, UserSettings::FieldOfViewMaxValue, "%.0f");
 		ImGui::SliderFloat("Aperture", &Settings().Aperture, 0.0f, 1.0f, "%.2f");
 		ImGui::SliderFloat("Focus", &Settings().FocusDistance, 0.1f, 20.0f, "%.1f");
+		ImGui::Checkbox("Animate", &Settings().Animate);
 		ImGui::NewLine();
 
 		ImGui::Text("Profiler");

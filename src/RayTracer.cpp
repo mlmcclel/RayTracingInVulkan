@@ -149,6 +149,7 @@ void RayTracer::Render(VkCommandBuffer commandBuffer, const size_t currentFrame,
 	const auto timeDelta = time_ - prevTime;
 
 	// Update the camera position / angle.
+	modelViewController_.AnimateCamera(userSettings_.Animate);
 	resetAccumulation_ = modelViewController_.UpdateCamera(cameraInitialSate_.ControlSpeed, timeDelta);
 
 	// Check the current state of the benchmark, update it for the new frame.
@@ -202,6 +203,8 @@ void RayTracer::OnKey(int key, int scancode, int action, int mods)
 			case GLFW_KEY_F2: userSettings_.ShowOverlay = !userSettings_.ShowOverlay; break;
 			case GLFW_KEY_R: userSettings_.IsRayTraced = !userSettings_.IsRayTraced; break;
 			case GLFW_KEY_H: userSettings_.ShowHeatmap = !userSettings_.ShowHeatmap; break;
+			case GLFW_KEY_M: userSettings_.Animate = !userSettings_.Animate; break;
+			case GLFW_KEY_O: userSettings_.IsDenoised = !userSettings_.IsDenoised; break;
 			case GLFW_KEY_P: isWireFrame_ = !isWireFrame_; break;
 			default: break;
 			}

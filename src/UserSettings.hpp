@@ -15,6 +15,7 @@ struct UserSettings final
 	// Renderer
 	bool IsRayTraced;
 	bool AccumulateRays;
+	bool IsDenoised;
 	uint32_t NumberOfSamples;
 	uint32_t NumberOfBounces;
 	uint32_t MaxNumberOfSamples;
@@ -27,6 +28,7 @@ struct UserSettings final
 	// Profiler
 	bool ShowHeatmap;
 	float HeatmapScale;
+	bool Animate;
 
 	// UI
 	bool ShowSettings;

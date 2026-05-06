@@ -1,0 +1,167 @@
+/*
+ * Copyright (c) 2019-2021, NVIDIA CORPORATION.  All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * SPDX-FileCopyrightText: Copyright (c) 2019-2021 NVIDIA CORPORATION
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+
+#pragma once
+
+#include <array>
+#include <iomanip>   // cerr
+#include <iostream>  // setw
+
+#include "OpenImageDenoise/oidn.hpp"
+#include "Vulkan.hpp" 
+
+#ifdef LINUX
+#include <unistd.h>
+#endif
+
+#include "imgui.h"
+
+namespace Vulkan
+{
+    class CommandPool;
+    class Device;
+
+    class DenoiserOIDN 
+    {
+    public:
+      DenoiserOIDN() = default;
+//      explicit DenoiserOIDN(Vulkan::Context* ctx);
+      ~DenoiserOIDN() = default;
+
+    //  void setup(const VkDevice& device, const VkPhysicalDevice& physicalDevice, uint32_t queueIndex);
+    //  bool initOptiX(const OptixDenoiserOptions& options, OptixPixelFormat pixelFormat, bool hdr);
+    //  void denoiseImageBuffer(uint64_t& fenceValue, float blendFactor = 0.0f);
+    //  void createSemaphore();
+
+    //  void destroy();
+    //  void destroyBuffer();
+
+    //  bool uiSetup();
+
+    //  void allocateBuffers(const VkExtent2D& imgSize);
+    //  void bufferToImage(const VkCommandBuffer& cmdBuf, nvvk::Texture* imgOut);
+    //  void imageToBuffer(const VkCommandBuffer& cmdBuf, const std::vector<nvvk::Texture>& imgIn);
+
+    //  void createCopyPipeline();
+    //  void copyImageToBuffer(const VkCommandBuffer& cmd, const std::vector<nvvk::Texture>& imgIn);
+    //  void copyBufferToImage(const VkCommandBuffer& cmd, const nvvk::Texture* imgIn);
+
+    //  VkSemaphore getTLSemaphore() const { return m_semaphore.vk; }
+
+    //  // Ui
+    //  int m_denoisedMode{1};
+    //  int m_startDenoiserFrame{0};
+
+    //private:
+    //  // Holding the Buffer for Cuda interop
+    //  struct BufferCuda
+    //  {
+    //    nvvk::Buffer bufVk;  // The Vulkan allocated buffer
+
+    //    // Extra for Cuda
+    //#ifdef WIN32
+    //    HANDLE handle = nullptr;  // The Win32 handle
+    //#else
+    //    int handle = -1;
+    //#endif
+    //    void* cudaPtr = nullptr;
+
+    //    void destroy(nvvk::ExportResourceAllocator& alloc)
+    //    {
+    //      alloc.destroy(bufVk);
+    //#ifdef WIN32
+    //      CloseHandle(handle);
+    //      handle = nullptr;
+    //#else
+    //      if(handle != -1)
+    //      {
+    //        close(handle);
+    //        handle = -1;
+    //      }
+    //#endif
+    //    }
+      };
+
+//  void createBufferCuda(BufferCuda& buf);
+//
+//
+//  // For synchronizing with Vulkan
+//  struct Semaphore
+//  {
+//    VkSemaphore             vk{};  // Vulkan
+//    cudaExternalSemaphore_t cu{};  // Cuda version
+//#ifdef WIN32
+//    HANDLE handle{INVALID_HANDLE_VALUE};
+//#else
+//    int handle{-1};
+//#endif
+//  } m_semaphore;
+//
+//  OptixDeviceContext     m_optixDevice     = {};
+//  OptixDenoiser          m_denoiser        = {};
+//  OptixDenoiserOptions   m_denoiserOptions = {};
+//  OptixDenoiserSizes     m_denoiserSizes   = {};
+//  OptixDenoiserAlphaMode m_denoiserAlpha   = {OPTIX_DENOISER_ALPHA_MODE_COPY};
+//  OptixPixelFormat       m_pixelFormat     = {};
+//
+//  CUdeviceptr m_dStateBuffer   = {};
+//  CUdeviceptr m_dScratchBuffer = {};
+//  CUdeviceptr m_dIntensity     = {};
+//  CUdeviceptr m_dMinRGB        = {};
+//  CUstream    m_cuStream       = {};
+//
+//  VkExtent2D m_imageSize   = {};
+//  uint32_t   m_sizeofPixel = {};
+//
+//  // Vulkan
+//  VkDevice         m_device         = {};
+//  VkPhysicalDevice m_physicalDevice = {};
+//  uint32_t         m_queueIndex     = {};
+//
+//  nvvk::DedicatedMemoryAllocator m_memAlloc;  // Using dedicated allocations for simplicity
+//  nvvk::ExportResourceAllocator  m_allocEx;   // ResourceAllocator with export flag (interop)
+//
+//  std::array<BufferCuda, 3> m_pixelBufferIn;  // RGB, Albedo, normal
+//  BufferCuda                m_pixelBufferOut; // Result of the denoiser
+//
+//  nvvk::DebugUtil m_debug;
+//
+//  enum  // The two compute shaders
+//  {
+//    eCpyToBuffer,
+//    eCpyToImage
+//  };
+//  struct VulkanDescritors
+//  {
+//    VkDescriptorPool      pool;
+//    VkDescriptorSetLayout layout;
+//    VkDescriptorSet       set;
+//  };
+//  std::array<VulkanDescritors, 2> m_desc{};
+//
+//  struct VulkanPipelines
+//  {
+//    VkPipeline       p;
+//    VkPipelineLayout layout;
+//  };
+//  std::array<VulkanPipelines, 2> m_pipelines{};
+};
+
+

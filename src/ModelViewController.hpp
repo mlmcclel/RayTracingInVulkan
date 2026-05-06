@@ -14,6 +14,7 @@ public:
 	bool OnCursorPosition(double xpos, double ypos);
 	bool OnMouseButton(int button, int action, int mods);
 	bool UpdateCamera(double speed, double timeDelta);
+	bool AnimateCamera( bool animate );
 
 private:
 

@@ -115,6 +115,26 @@ bool ModelViewController::UpdateCamera(const double speed, const double timeDelt
 	return updated;
 }
 
+bool ModelViewController::AnimateCamera( bool animate )
+{
+	if (animate)
+	{
+		cameraRotY_ = 0;
+		cameraRotX_ = -2.0;
+		//cameraMovingForward_ = true;
+		cameraMovingRight_ = true;
+	}
+	else
+	{
+		cameraRotY_ = 0;
+		cameraRotX_ = 0;
+		//cameraMovingForward_ = true;
+		cameraMovingRight_ = false;
+	}
+
+	return true;
+}
+
 void ModelViewController::MoveForward(const float d)
 {
 	position_ += d * forward_;

@@ -14,7 +14,7 @@ public:
 	bool OnCursorPosition(double xpos, double ypos);
 	bool OnMouseButton(int button, int action, int mods);
 	bool UpdateCamera(double speed, double timeDelta);
-	bool AnimateCamera( bool animate );
+	bool AnimateCamera(bool animate, float focusDistance, double timeDelta);
 
 private:
 
@@ -50,4 +50,7 @@ private:
 	
 	bool mouseLeftPressed_{};
 	bool mouseRightPressed_{};
+
+	bool isAnimating_{};
+	glm::vec3 orbitPivot_{};
 };

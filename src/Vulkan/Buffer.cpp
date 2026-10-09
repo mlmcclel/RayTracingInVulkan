@@ -1,13 +1,18 @@
 #include "Buffer.hpp"
 #include "SingleTimeCommands.hpp"
+#include <stdexcept>
 
 namespace Vulkan {
 
-Buffer::Buffer(const class Device& device, const size_t size, const VkBufferUsageFlags usage) :
-	device_(device)
+Buffer::Buffer(const class Device& device, const size_t size, const VkBufferUsageFlags usage, const VkExternalMemoryHandleTypeFlagBits externalHandleType) :
+	device_(device), externalHandleType_(externalHandleType)
 {
+	VkExternalMemoryBufferCreateInfo externalInfo{};
+	externalInfo.sType = VK_STRUCTURE_TYPE_EXTERNAL_MEMORY_BUFFER_CREATE_INFO;
+	externalInfo.handleTypes = externalHandleType_;
 	VkBufferCreateInfo bufferInfo = {};
 	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufferInfo.pNext = externalHandleType_ ? &externalInfo : nullptr;
 	bufferInfo.size = size;
 	bufferInfo.usage = usage;
 	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
@@ -38,6 +43,18 @@ DeviceMemory Buffer::AllocateMemory(const VkMemoryAllocateFlags allocateFlags, c
 	Check(vkBindBufferMemory(device_.Handle(), buffer_, memory.Handle(), 0),
 		"bind buffer memory");
 
+	return memory;
+}
+
+DeviceMemory Buffer::AllocateExternalMemory(const VkMemoryPropertyFlags propertyFlags)
+{
+	if (!externalHandleType_)
+	{
+		throw std::logic_error("buffer was not created for external memory");
+	}
+	const auto requirements = GetMemoryRequirements();
+	DeviceMemory memory(device_, requirements.size, requirements.memoryTypeBits, 0, propertyFlags, externalHandleType_, buffer_);
+	Check(vkBindBufferMemory(device_.Handle(), buffer_, memory.Handle(), 0), "bind external buffer memory");
 	return memory;
 }
 

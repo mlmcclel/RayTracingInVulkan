@@ -95,6 +95,8 @@ set(src_files_vulkan
 	Vulkan/Window.cpp
 	Vulkan/Window.hpp
 	Vulkan/WindowConfig.hpp
+	Vulkan/OIDNDenoiser.cpp
+	Vulkan/OIDNDenoiser.hpp
 )
 
 set(src_files_vulkan_raytracing
@@ -155,6 +157,25 @@ endif()
 
 add_dependencies(${exe_name} Assets)
 set_target_properties(${exe_name} PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
+set_target_properties(${exe_name} PROPERTIES NO_SYSTEM_FROM_IMPORTED TRUE)
 target_include_directories(${exe_name} PRIVATE . ${STB_INCLUDE_DIRS} ${Vulkan_INCLUDE_DIRS})
 target_link_directories(${exe_name} PRIVATE ${Vulkan_LIBRARY})
-target_link_libraries(${exe_name} PRIVATE Boost::boost Boost::exception Boost::program_options glfw glm::glm imgui::imgui tinyobjloader::tinyobjloader ${Vulkan_LIBRARIES} ${extra_libs})
+target_link_libraries(${exe_name} PRIVATE Boost::boost Boost::exception Boost::program_options glfw glm::glm imgui::imgui tinyobjloader::tinyobjloader OpenImageDenoise ${Vulkan_LIBRARIES} ${extra_libs})
+
+get_filename_component(OIDN_PACKAGE_ROOT "${OpenImageDenoise_DIR}/../../.." ABSOLUTE)
+target_include_directories(${exe_name} BEFORE PRIVATE "${OIDN_PACKAGE_ROOT}/include")
+if (WIN32)
+	set(OIDN_RUNTIME_DIRECTORY "${OIDN_PACKAGE_ROOT}/bin")
+	file(GLOB OIDN_RUNTIME_FILES "${OIDN_RUNTIME_DIRECTORY}/*.dll")
+elseif (UNIX)
+	set(OIDN_RUNTIME_DIRECTORY "${OIDN_PACKAGE_ROOT}/lib")
+	file(GLOB OIDN_RUNTIME_FILES "${OIDN_RUNTIME_DIRECTORY}/*.so" "${OIDN_RUNTIME_DIRECTORY}/*.so.*")
+	set_property(TARGET ${exe_name} APPEND PROPERTY BUILD_RPATH "$ORIGIN")
+endif ()
+
+foreach (OIDN_RUNTIME_FILE ${OIDN_RUNTIME_FILES})
+	add_custom_command(TARGET ${exe_name} POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different "${OIDN_RUNTIME_FILE}" "$<TARGET_FILE_DIR:${exe_name}>"
+		VERBATIM
+	)
+endforeach ()

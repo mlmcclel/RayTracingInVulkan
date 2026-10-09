@@ -16,6 +16,8 @@ void ModelViewController::Reset(const glm::mat4& modelView)
 	mouseLeftPressed_ = false;
 	mouseRightPressed_ = false;
 
+	isAnimating_ = false;
+
 	UpdateVectors();
 }
 
@@ -115,22 +117,28 @@ bool ModelViewController::UpdateCamera(const double speed, const double timeDelt
 	return updated;
 }
 
-bool ModelViewController::AnimateCamera( bool animate )
+bool ModelViewController::AnimateCamera(const bool animate, const float focusDistance, const double timeDelta)
 {
-	if (animate)
+	if (!animate)
 	{
-		cameraRotY_ = 0;
-		cameraRotX_ = -2.0;
-		//cameraMovingForward_ = true;
-		cameraMovingRight_ = true;
+		isAnimating_ = false;
+		return false;
 	}
-	else
+
+	if (!isAnimating_)
 	{
-		cameraRotY_ = 0;
-		cameraRotX_ = 0;
-		//cameraMovingForward_ = true;
-		cameraMovingRight_ = false;
+		orbitPivot_ = glm::vec3(position_ + forward_ * focusDistance);
+		isAnimating_ = true;
 	}
+
+	const float secondsPerRevolution = 20.0f;
+	const auto angle = static_cast<float>(glm::radians(360.0) / secondsPerRevolution * timeDelta);
+
+	const auto rotation = glm::rotate(glm::mat4(1), angle, glm::vec3(0, 1, 0));
+	const auto offset = rotation * glm::vec4(glm::vec3(position_) - orbitPivot_, 0);
+	position_ = glm::vec4(orbitPivot_ + glm::vec3(offset), 1);
+
+	Rotate(-angle, 0);
 
 	return true;
 }

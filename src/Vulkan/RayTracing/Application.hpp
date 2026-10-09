@@ -10,6 +10,8 @@ namespace Vulkan
 	class DeviceMemory;
 	class Image;
 	class ImageView;
+	class DenoiserOIDN;
+	class DescriptorSetManager;
 }
 
 namespace Vulkan::RayTracing
@@ -33,6 +35,7 @@ namespace Vulkan::RayTracing
 		void OnDeviceSet() override;
 		void CreateAccelerationStructures();
 		void DeleteAccelerationStructures();
+		const std::string& DenoiserStatus() const;
 		void CreateSwapChain() override;
 		void DeleteSwapChain() override;
 		void Render(VkCommandBuffer commandBuffer, size_t currentFrame, uint32_t imageIndex) override;
@@ -42,6 +45,9 @@ namespace Vulkan::RayTracing
 		void CreateBottomLevelStructures(VkCommandBuffer commandBuffer);
 		void CreateTopLevelStructures(VkCommandBuffer commandBuffer);
 		void CreateOutputImage();
+		void CreateDenoiserFrames(bool shared);
+		void CreateConversionPipeline();
+		void DestroyConversionPipeline();
 
 		std::unique_ptr<class DeviceProcedures> deviceProcedures_;
 		std::unique_ptr<class RayTracingProperties> rayTracingProperties_;
@@ -66,6 +72,16 @@ namespace Vulkan::RayTracing
 		std::unique_ptr<Image> outputImage_;
 		std::unique_ptr<DeviceMemory> outputImageMemory_;
 		std::unique_ptr<ImageView> outputImageView_;
+		struct DenoiserFrame;
+		std::vector<std::unique_ptr<DenoiserFrame>> denoiserFrames_;
+		std::unique_ptr<Vulkan::DenoiserOIDN> denoiser_;
+		bool denoisingEnabled_{};
+		bool externalMemoryAvailable_{};
+		bool sharedMode_{};
+		int sharedFailedDeviceId_{ -1 };
+		std::unique_ptr<Vulkan::DescriptorSetManager> conversionDescriptors_;
+		VkPipelineLayout conversionLayout_{};
+		VkPipeline conversionPipeline_{};
 		
 		std::unique_ptr<class RayTracingPipeline> rayTracingPipeline_;
 		std::unique_ptr<class ShaderBindingTable> shaderBindingTable_;

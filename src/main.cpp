@@ -7,8 +7,6 @@
 #include "Utilities/Exception.hpp"
 #include "Options.hpp"
 #include "RayTracer.hpp"
-#include "OpenImageDenoise/config.h"
-#include "OpenImageDenoise/oidn.hpp"
 
 #include <algorithm>
 #include <cstdlib>
@@ -23,8 +21,6 @@ namespace
 	void PrintVulkanDevices(const Vulkan::Application& application, const std::vector<uint32_t>& visible_devices);
 	void PrintVulkanSwapChainInformation(const Vulkan::Application& application, bool benchmark);
 	void SetVulkanDevice(Vulkan::Application& application, const std::vector<uint32_t>& visible_devices);
-	void PrintOIDNInformation();
-	void PrintOIDNDevices();
 }
 
 int main(int argc, const char* argv[]) noexcept
@@ -49,9 +45,6 @@ int main(int argc, const char* argv[]) noexcept
 		PrintVulkanInstanceInformation(application, options.Benchmark);
 		PrintVulkanLayersInformation(application, options.Benchmark);
 		PrintVulkanDevices(application, options.VisibleDevices);
-
-		PrintOIDNInformation();
-		PrintOIDNDevices();
 
 		SetVulkanDevice(application, options.VisibleDevices);
 
@@ -110,7 +103,8 @@ namespace
 
 		userSettings.IsRayTraced = true;
 		userSettings.AccumulateRays = true;
-		userSettings.IsDenoised = false;
+		userSettings.IsDenoised = options.Denoise;
+		userSettings.PreferOIDNSYCL = options.UseOIDNSYCL;
 		userSettings.NumberOfSamples = options.Samples;
 		userSettings.NumberOfBounces = options.Bounces;
 		userSettings.MaxNumberOfSamples = options.MaxSamples;
@@ -130,12 +124,6 @@ namespace
 		std::cout << std::endl;
 	}
 	
-	void PrintOIDNInformation()
-	{
-		std::cout << "Intel Open Image Denoise Version: " << OIDN_VERSION_STRING << std::endl;
-		std::cout << std::endl;
-	}
-
 	void PrintVulkanInstanceInformation(const Vulkan::Application& application, const bool benchmark)
 	{
 		if (benchmark)
@@ -209,20 +197,6 @@ namespace
 			std::cout << "vulkan " << vulkanVersion << ", ";
 			std::cout << "driver " << driverProp.driverName << " " << driverProp.driverInfo << " - " << driverVersion;
 			std::cout << ")" << std::endl;
-		}
-
-		std::cout << std::endl;
-	}
-
-	void PrintOIDNDevices()
-	{
-		std::cout << "Intel Open Image Denoise Devices - ";
-		int numDevices = oidnGetNumPhysicalDevices();
-		std::cout << "Found " << numDevices << " physical devices" << std::endl;
-
-		for (int i = 0; i < numDevices; i++) {
-			const char* name = oidnGetPhysicalDeviceString(i, "name");
-			std::cout << " Device " << i << " : " << (name ? name : "(unknown)") << std::endl;
 		}
 
 		std::cout << std::endl;

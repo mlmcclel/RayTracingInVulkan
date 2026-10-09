@@ -16,6 +16,8 @@ struct UserSettings final
 	bool IsRayTraced;
 	bool AccumulateRays;
 	bool IsDenoised;
+	int OIDNDeviceIndex{};
+	bool PreferOIDNSYCL{};
 	uint32_t NumberOfSamples;
 	uint32_t NumberOfBounces;
 	uint32_t MaxNumberOfSamples;

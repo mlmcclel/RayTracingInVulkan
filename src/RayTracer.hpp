@@ -3,6 +3,7 @@
 #include "ModelViewController.hpp"
 #include "SceneList.hpp"
 #include "UserSettings.hpp"
+#include "Vulkan/OIDNDenoiser.hpp"
 #include "Vulkan/RayTracing/Application.hpp"
 
 class RayTracer final : public Vulkan::RayTracing::Application
@@ -18,6 +19,9 @@ protected:
 
 	const Assets::Scene& GetScene() const override { return *scene_; }
 	Assets::UniformBufferObject GetUniformBufferObject(VkExtent2D extent) const override;
+	bool IsDenoisingEnabled() const override { return userSettings_.IsDenoised; }
+	int OIDNPhysicalDeviceId() const override;
+	int OIDNCpuPhysicalDeviceId() const override;
 
 	void SetPhysicalDevice(
 		VkPhysicalDevice physicalDevice, 
@@ -50,6 +54,7 @@ private:
 
 	std::unique_ptr<const Assets::Scene> scene_;
 	std::unique_ptr<class UserInterface> userInterface_;
+	std::vector<Vulkan::OIDNDeviceInfo> oidnDevices_;
 
 	double time_{};
 

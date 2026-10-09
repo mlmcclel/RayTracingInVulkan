@@ -4,7 +4,7 @@
 
 My implementation of [Peter Shirley's Ray Tracing in One Weekend](https://github.com/RayTracing/raytracing.github.io) books using Vulkan and NVIDIA's RTX extension (formerly VK_NV_ray_tracing, now ported to Khronos cross platform VK_KHR_ray_tracing_pipeline extension). This allows most scenes to be rendered at interactive speed on appropriate hardware.
 
-The real-time ray tracer can also load full geometry from OBJ files as well as render the procedural spheres from the book. An accumulation buffer is used to increase the sample count when the camera is not moving while keeping the frame rate interactive. I have added a UI built using [Dear ImGui](https://github.com/ocornut/imgui) to allow changing the renderer parameters on the fly. Unlike projects such as [Q2VKPT](http://brechpunkt.de/q2vkpt/), there is no denoising filter. So the image will get noisy when moving the camera.
+The real-time ray tracer can also load full geometry from OBJ files as well as render the procedural spheres from the book. An accumulation buffer is used to increase the sample count when the camera is not moving while keeping the frame rate interactive. I have added a UI built using [Dear ImGui](https://github.com/ocornut/imgui) to allow changing the renderer parameters on the fly. Optional Intel Open Image Denoise (OIDN) denoising is available from the Ray Tracing settings. Available CPU, SYCL, CUDA, and HIP devices are listed at runtime. On Windows, a matching Intel SYCL and Vulkan GPU can share device-local buffers, avoiding host image readback and upload. This requires compatible external-memory support in both drivers; otherwise, denoising continues through host staging. Failed accelerator initialization falls back to CPU. GPU denoising currently waits on the host for each reused frame slot and may lag by a few in-flight frames.
 
 This personal project follows my own attempts at CPU ray tracing following Peter Shirley's books (see [here](https://github.com/GPSnoopy/RayTracingInOneWeekend) and [here](https://github.com/GPSnoopy/RayTracingTheNextWeek) if you are interested).
 
@@ -30,6 +30,12 @@ To benchmark all the scenes, starting from scene #1:
 ```
 RayTracer.exe --benchmark --width 2560 --height 1440 --fullscreen --scene 1 --next-scenes --present-mode 0
 ```
+To compare CPU OIDN with shared Intel SYCL buffers on a supported Windows GPU, use the same scene and settings for both runs:
+```
+RayTracer.exe --benchmark --denoise --width 640 --height 360 --samples 1 --bounces 2 --max-time 15
+RayTracer.exe --benchmark --denoise --oidn-sycl --width 640 --height 360 --samples 1 --bounces 2 --max-time 15
+```
+The console reports whether OIDN used shared GPU buffers or host staging. `--oidn-sycl` selects SYCL when available; otherwise, it retains the CPU device.
 Here are my results with the command above on a few different computers.
 
 **RayTracer Release 6 (NVIDIA drivers 461.40, AMD drivers 21.1.1)**
@@ -50,7 +56,7 @@ Here are my results with the command above on a few different computers.
 
 ## Building
 
-First you will need to install the [Vulkan SDK](https://vulkan.lunarg.com/sdk/home). For Windows, LunarG provides installers. For Ubuntu LTS, they have native packages available. For other Linux distributions, they only provide tarballs. The rest of the third party dependencies can be built using [Microsoft's vcpkg](https://github.com/Microsoft/vcpkg) as provided by the scripts below.
+First you will need to install the [Vulkan SDK](https://vulkan.lunarg.com/sdk/home). For Windows, LunarG provides installers. For Ubuntu LTS, they have native packages available. For other Linux distributions, they only provide tarballs. The rest of the third party dependencies can be built using [Microsoft's vcpkg](https://github.com/Microsoft/vcpkg) as provided by the scripts below. The scripts also download the official Intel OIDN 2.5.1 binaries and verify their SHA-256 checksums. The provided Linux OIDN binary supports x86-64.
 
 If in doubt, please check the GitHub Actions [continuous integration configurations](.github/workflows) for more details.
 
@@ -59,6 +65,8 @@ If in doubt, please check the GitHub Actions [continuous integration configurati
 vcpkg_windows.bat
 build_windows.bat
 ```
+In VS Code, run `Build RayTracer` from **Terminal > Run Build Task** after dependency setup has completed. The `Build RayTracer (Windows Debug)` task builds the Debug configuration.
+
 **Linux (GCC 9+ Makefile)** [![Linux CI Status](https://github.com/GPSnoopy/RayTracingInVulkan/workflows/Linux%20CI/badge.svg)](https://github.com/GPSnoopy/RayTracingInVulkan/actions?query=workflow%3A%22Linux+CI%22)
 
 For example, on Ubuntu 20.04 (same as the CI pipeline, build steps on other distributions may vary):
@@ -67,6 +75,7 @@ sudo apt-get install curl unzip tar libxi-dev libxinerama-dev libxcursor-dev xor
 ./vcpkg_linux.sh
 ./build_linux.sh
 ```
+The Linux VS Code build task runs `build_linux.sh` after dependency setup.
 
 Fedora Installation
 

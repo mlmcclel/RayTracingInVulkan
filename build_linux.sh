@@ -24,5 +24,5 @@ nproc=$(nproc || echo 4)
 
 mkdir --parents build/linux
 cd build/linux
-cmake -D Boost_NO_SYSTEM_PATHS=ON -D CMAKE_BUILD_TYPE=Release -D VCPKG_TARGET_TRIPLET="${vcpkg_arch}-linux" -D CMAKE_TOOLCHAIN_FILE=../vcpkg.linux/scripts/buildsystems/vcpkg.cmake ../..
+cmake -D Boost_NO_SYSTEM_PATHS=ON -D CMAKE_BUILD_TYPE=Release -D VCPKG_TARGET_TRIPLET="${vcpkg_arch}-linux" -D CMAKE_TOOLCHAIN_FILE=../vcpkg.linux/scripts/buildsystems/vcpkg.cmake -D OpenImageDenoise_DIR="$(pwd)/../oidn/oidn-2.5.1.x86_64.linux/lib/cmake/OpenImageDenoise-2.5.1" ../..
 make -j${nproc}

@@ -1,0 +1,36 @@
+#version 450
+
+layout(local_size_x = 8, local_size_y = 8) in;
+layout(binding = 0, rgba8) uniform readonly image2D renderedImage;
+layout(std430, binding = 1) buffer ColorInput { vec4 inputPixels[]; };
+layout(std430, binding = 2) readonly buffer DenoisedOutput { vec4 outputPixels[]; };
+layout(std430, binding = 3) buffer DisplayOutput { uint packedPixels[]; };
+
+layout(push_constant) uniform Parameters
+{
+    uint width;
+    uint height;
+    uint mode;
+    uint bgra;
+} parameters;
+
+void main()
+{
+    uvec2 pixel = gl_GlobalInvocationID.xy;
+    if (pixel.x >= parameters.width || pixel.y >= parameters.height)
+        return;
+
+    uint index = pixel.y * parameters.width + pixel.x;
+    if (parameters.mode == 0)
+    {
+        inputPixels[index] = imageLoad(renderedImage, ivec2(pixel));
+    }
+    else
+    {
+        vec4 color = vec4(outputPixels[index].rgb, inputPixels[index].a);
+        uvec4 bytes = uvec4(floor(clamp(color, 0.0, 1.0) * 255.0 + 0.5));
+        if (parameters.bgra != 0)
+            bytes.rb = bytes.br;
+        packedPixels[index] = bytes.r | (bytes.g << 8) | (bytes.b << 16) | (bytes.a << 24);
+    }
+}

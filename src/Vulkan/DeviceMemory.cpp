@@ -8,14 +8,23 @@ DeviceMemory::DeviceMemory(
 	const class Device& device, 
 	const size_t size, 
 	const uint32_t memoryTypeBits,
-	const VkMemoryAllocateFlags allocateFLags,
-	const VkMemoryPropertyFlags propertyFlags) :
+	const VkMemoryAllocateFlags allocateFlags,
+	const VkMemoryPropertyFlags propertyFlags,
+	const VkExternalMemoryHandleTypeFlagBits externalHandleType,
+	const VkBuffer dedicatedBuffer) :
 	device_(device)
 {
+	VkMemoryDedicatedAllocateInfo dedicatedInfo{};
+	dedicatedInfo.sType = VK_STRUCTURE_TYPE_MEMORY_DEDICATED_ALLOCATE_INFO;
+	dedicatedInfo.buffer = dedicatedBuffer;
+	VkExportMemoryAllocateInfo exportInfo{};
+	exportInfo.sType = VK_STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO;
+	exportInfo.handleTypes = externalHandleType;
+	exportInfo.pNext = dedicatedBuffer ? &dedicatedInfo : nullptr;
 	VkMemoryAllocateFlagsInfo flagsInfo = {};
 	flagsInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
-	flagsInfo.pNext = nullptr;
-	flagsInfo.flags = allocateFLags;
+	flagsInfo.pNext = externalHandleType ? &exportInfo : nullptr;
+	flagsInfo.flags = allocateFlags;
 	
 	VkMemoryAllocateInfo allocInfo = {};
 	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -25,6 +34,26 @@ DeviceMemory::DeviceMemory(
 
 	Check(vkAllocateMemory(device.Handle(), &allocInfo, nullptr, &memory_),
 		"allocate memory");
+}
+
+void* DeviceMemory::ExportWin32Handle() const
+{
+#ifdef _WIN32
+	const auto getHandle = reinterpret_cast<PFN_vkGetMemoryWin32HandleKHR>(vkGetDeviceProcAddr(device_.Handle(), "vkGetMemoryWin32HandleKHR"));
+	if (!getHandle)
+	{
+		throw std::runtime_error("external Win32 memory export is unavailable");
+	}
+	VkMemoryGetWin32HandleInfoKHR info{};
+	info.sType = VK_STRUCTURE_TYPE_MEMORY_GET_WIN32_HANDLE_INFO_KHR;
+	info.memory = memory_;
+	info.handleType = VK_EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT;
+	HANDLE handle = nullptr;
+	Check(getHandle(device_.Handle(), &info, &handle), "export Win32 memory handle");
+	return handle;
+#else
+	throw std::runtime_error("Win32 memory export is unavailable on this platform");
+#endif
 }
 
 DeviceMemory::DeviceMemory(DeviceMemory&& other) noexcept :

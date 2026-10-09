@@ -14,7 +14,8 @@ namespace Vulkan
 		DeviceMemory& operator = (const DeviceMemory&) = delete;
 		DeviceMemory& operator = (DeviceMemory&&) = delete;
 
-		DeviceMemory(const Device& device, size_t size, uint32_t memoryTypeBits, VkMemoryAllocateFlags allocateFLags, VkMemoryPropertyFlags propertyFlags);
+		DeviceMemory(const Device& device, size_t size, uint32_t memoryTypeBits, VkMemoryAllocateFlags allocateFlags, VkMemoryPropertyFlags propertyFlags,
+			VkExternalMemoryHandleTypeFlagBits externalHandleType = {}, VkBuffer dedicatedBuffer = VK_NULL_HANDLE);
 		DeviceMemory(DeviceMemory&& other) noexcept;
 		~DeviceMemory();
 
@@ -22,6 +23,7 @@ namespace Vulkan
 
 		void* Map(size_t offset, size_t size);
 		void Unmap();
+		void* ExportWin32Handle() const;
 
 	private:
 

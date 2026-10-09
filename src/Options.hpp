@@ -30,6 +30,8 @@ public:
 	uint32_t Samples{};
 	uint32_t Bounces{};
 	uint32_t MaxSamples{};
+	bool Denoise{};
+	bool UseOIDNSYCL{};
 
 	// Scene options.
 	uint32_t SceneIndex{};

@@ -21,6 +21,8 @@ Options::Options(const int argc, const char* argv[])
 		("samples", value<uint32_t>(&Samples)->default_value(8), "The number of ray samples per pixel.")
 		("bounces", value<uint32_t>(&Bounces)->default_value(16), "The maximum number of bounces per ray.")
 		("max-samples", value<uint32_t>(&MaxSamples)->default_value(64 * 1024), "The maximum number of accumulated ray samples per pixel.")
+		("denoise", bool_switch(&Denoise)->default_value(false), "Enable OIDN denoising.")
+		("oidn-sycl", bool_switch(&UseOIDNSYCL)->default_value(false), "Select an OIDN SYCL device when available.")
 		;
 
 	options_description scene("Scene options", lineLength);

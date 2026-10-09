@@ -48,6 +48,9 @@ namespace Vulkan
 		
 		virtual const Assets::Scene& GetScene() const = 0;
 		virtual Assets::UniformBufferObject GetUniformBufferObject(VkExtent2D extent) const = 0;
+		virtual bool IsDenoisingEnabled() const { return false; }
+		virtual int OIDNPhysicalDeviceId() const { return -1; }
+		virtual int OIDNCpuPhysicalDeviceId() const { return -1; }
 
 		virtual void SetPhysicalDevice(
 			VkPhysicalDevice physicalDevice, 

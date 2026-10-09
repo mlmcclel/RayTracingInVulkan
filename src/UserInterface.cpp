@@ -34,8 +34,10 @@ UserInterface::UserInterface(
 	Vulkan::CommandPool& commandPool, 
 	const Vulkan::SwapChain& swapChain, 
 	const Vulkan::DepthBuffer& depthBuffer,
-	UserSettings& userSettings) :
-	userSettings_(userSettings)
+	UserSettings& userSettings,
+	const std::vector<Vulkan::OIDNDeviceInfo>& oidnDevices) :
+	userSettings_(userSettings),
+	oidnDevices_(oidnDevices)
 {
 	const auto& device = swapChain.Device();
 	const auto& window = device.Surface().Instance().Window();
@@ -112,13 +114,13 @@ UserInterface::~UserInterface()
 	ImGui::DestroyContext();
 }
 
-void UserInterface::Render(VkCommandBuffer commandBuffer, const Vulkan::FrameBuffer& frameBuffer, const Statistics& statistics)
+void UserInterface::Render(VkCommandBuffer commandBuffer, const Vulkan::FrameBuffer& frameBuffer, const Statistics& statistics, const std::string& denoiserStatus)
 {
 	ImGui_ImplGlfw_NewFrame();
 	ImGui_ImplVulkan_NewFrame();
 	ImGui::NewFrame();
 
-	DrawSettings();
+	DrawSettings(denoiserStatus);
 	DrawOverlay(statistics);
 	//ImGui::ShowStyleEditor();
 	ImGui::Render();
@@ -147,7 +149,7 @@ bool UserInterface::WantsToCaptureMouse() const
 	return ImGui::GetIO().WantCaptureMouse;
 }
 
-void UserInterface::DrawSettings()
+void UserInterface::DrawSettings(const std::string& denoiserStatus)
 {
 	if (!Settings().ShowSettings)
 	{
@@ -158,6 +160,11 @@ void UserInterface::DrawSettings()
 	const ImVec2 pos = ImVec2(distance, distance);
 	const ImVec2 posPivot = ImVec2(0.0f, 0.0f);
 	ImGui::SetNextWindowPos(pos, ImGuiCond_Always, posPivot);
+
+	const ImVec2 viewportSize = ImGui::GetMainViewport()->Size;
+	ImGui::SetNextWindowSizeConstraints(
+		ImVec2(0.0f, 0.0f),
+		ImVec2(viewportSize.x * 0.25f, viewportSize.y * 0.9f));
 
 	const auto flags =
 		ImGuiWindowFlags_AlwaysAutoResize |
@@ -200,7 +207,41 @@ void UserInterface::DrawSettings()
 		ImGui::Separator();
 		ImGui::Checkbox("Enable ray tracing", &Settings().IsRayTraced);
 		ImGui::Checkbox("Accumulate rays between frames", &Settings().AccumulateRays);
-		ImGui::Checkbox("Enable Intel OpenImage Denoise", &Settings().IsDenoised);
+		if (oidnDevices_.empty())
+		{
+			Settings().IsDenoised = false;
+			ImGui::BeginDisabled();
+			ImGui::Checkbox("Enable Intel OpenImage Denoise", &Settings().IsDenoised);
+			ImGui::EndDisabled();
+			ImGui::TextDisabled("No supported OIDN device found");
+		}
+		else
+		{
+			ImGui::Checkbox("Enable Intel OpenImage Denoise", &Settings().IsDenoised);
+			std::vector<std::string> deviceNames;
+			std::vector<const char*> deviceLabels;
+			deviceNames.reserve(oidnDevices_.size());
+			deviceLabels.reserve(oidnDevices_.size());
+			for (const auto& device : oidnDevices_)
+			{
+				const char* typeName = device.Type == oidn::DeviceType::CPU ? "CPU" :
+					device.Type == oidn::DeviceType::SYCL ? "SYCL" :
+					device.Type == oidn::DeviceType::CUDA ? "CUDA" : "HIP";
+				deviceNames.push_back(std::string(typeName) + " - " + device.Name);
+			}
+			for (const auto& name : deviceNames)
+			{
+				deviceLabels.push_back(name.c_str());
+			}
+			Settings().OIDNDeviceIndex = std::clamp(Settings().OIDNDeviceIndex, 0, static_cast<int>(deviceLabels.size()) - 1);
+			ImGui::PushItemWidth(-1);
+			ImGui::Combo("OIDN device", &Settings().OIDNDeviceIndex, deviceLabels.data(), static_cast<int>(deviceLabels.size()));
+			ImGui::PopItemWidth();
+			if (!denoiserStatus.empty())
+			{
+				ImGui::TextWrapped("%s", denoiserStatus.c_str());
+			}
+		}
 		uint32_t min = 1, max = 128;
 		ImGui::SliderScalar("Samples", ImGuiDataType_U32, &Settings().NumberOfSamples, &min, &max);
 		min = 1, max = 32;

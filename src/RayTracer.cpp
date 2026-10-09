@@ -87,16 +87,59 @@ void RayTracer::SetPhysicalDevice(
 void RayTracer::OnDeviceSet()
 {
 	Application::OnDeviceSet();
+	oidnDevices_ = Vulkan::DenoiserOIDN::EnumerateDevices();
+	const auto cpuDevice = std::find_if(oidnDevices_.begin(), oidnDevices_.end(), [](const Vulkan::OIDNDeviceInfo& device)
+	{
+		return device.Type == oidn::DeviceType::CPU;
+	});
+	if (cpuDevice != oidnDevices_.end())
+	{
+		userSettings_.OIDNDeviceIndex = static_cast<int>(std::distance(oidnDevices_.begin(), cpuDevice));
+	}
+	if (userSettings_.PreferOIDNSYCL)
+	{
+		const auto syclDevice = std::find_if(oidnDevices_.begin(), oidnDevices_.end(), [](const Vulkan::OIDNDeviceInfo& device)
+		{
+			return device.Type == oidn::DeviceType::SYCL;
+		});
+		if (syclDevice != oidnDevices_.end())
+		{
+			userSettings_.OIDNDeviceIndex = static_cast<int>(std::distance(oidnDevices_.begin(), syclDevice));
+		}
+		else
+		{
+			std::cerr << "OIDN SYCL device unavailable; using CPU" << std::endl;
+		}
+	}
 
 	LoadScene(userSettings_.SceneIndex);
 	CreateAccelerationStructures();
+}
+
+int RayTracer::OIDNPhysicalDeviceId() const
+{
+	if (oidnDevices_.empty())
+	{
+		return -1;
+	}
+	const int selectedIndex = std::clamp(userSettings_.OIDNDeviceIndex, 0, static_cast<int>(oidnDevices_.size()) - 1);
+	return oidnDevices_[selectedIndex].Id;
+}
+
+int RayTracer::OIDNCpuPhysicalDeviceId() const
+{
+	const auto cpuDevice = std::find_if(oidnDevices_.begin(), oidnDevices_.end(), [](const Vulkan::OIDNDeviceInfo& device)
+	{
+		return device.Type == oidn::DeviceType::CPU;
+	});
+	return cpuDevice == oidnDevices_.end() ? -1 : cpuDevice->Id;
 }
 
 void RayTracer::CreateSwapChain()
 {
 	Application::CreateSwapChain();
 
-	userInterface_.reset(new UserInterface(CommandPool(), SwapChain(), DepthBuffer(), userSettings_));
+	userInterface_.reset(new UserInterface(CommandPool(), SwapChain(), DepthBuffer(), userSettings_, oidnDevices_));
 	resetAccumulation_ = true;
 
 	CheckFramebufferSize();
@@ -149,8 +192,8 @@ void RayTracer::Render(VkCommandBuffer commandBuffer, const size_t currentFrame,
 	const auto timeDelta = time_ - prevTime;
 
 	// Update the camera position / angle.
-	modelViewController_.AnimateCamera(userSettings_.Animate);
-	resetAccumulation_ = modelViewController_.UpdateCamera(cameraInitialSate_.ControlSpeed, timeDelta);
+	const bool animated = modelViewController_.AnimateCamera(userSettings_.Animate, userSettings_.FocusDistance, timeDelta);
+	resetAccumulation_ = modelViewController_.UpdateCamera(cameraInitialSate_.ControlSpeed, timeDelta) || animated;
 
 	// Check the current state of the benchmark, update it for the new frame.
 	CheckAndUpdateBenchmarkState(prevTime);
@@ -176,7 +219,7 @@ void RayTracer::Render(VkCommandBuffer commandBuffer, const size_t currentFrame,
 		stats.TotalSamples = totalNumberOfSamples_;
 	}
 
-	userInterface_->Render(commandBuffer, SwapChainFrameBuffer(imageIndex), stats);
+	userInterface_->Render(commandBuffer, SwapChainFrameBuffer(imageIndex), stats, DenoiserStatus());
 }
 
 void RayTracer::OnKey(int key, int scancode, int action, int mods)

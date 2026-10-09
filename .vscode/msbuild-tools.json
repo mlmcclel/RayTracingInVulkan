@@ -1,0 +1,7 @@
+{
+ "msbuild": {
+  "solutionFile": "build/windows/RayTracingInVulkan.sln",
+   "configuration": "Debug",
+  "platform": "x64"
+ }
+}

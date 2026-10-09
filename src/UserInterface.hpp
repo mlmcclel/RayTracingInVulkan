@@ -1,5 +1,6 @@
 #pragma once
 #include "Vulkan/Vulkan.hpp"
+#include "Vulkan/OIDNDenoiser.hpp"
 #include <memory>
 
 namespace Vulkan
@@ -32,10 +33,11 @@ public:
 		Vulkan::CommandPool& commandPool, 
 		const Vulkan::SwapChain& swapChain, 
 		const Vulkan::DepthBuffer& depthBuffer,
-		UserSettings& userSettings);
+		UserSettings& userSettings,
+		const std::vector<Vulkan::OIDNDeviceInfo>& oidnDevices);
 	~UserInterface();
 
-	void Render(VkCommandBuffer commandBuffer, const Vulkan::FrameBuffer& frameBuffer, const Statistics& statistics);
+	void Render(VkCommandBuffer commandBuffer, const Vulkan::FrameBuffer& frameBuffer, const Statistics& statistics, const std::string& denoiserStatus);
 
 	bool WantsToCaptureKeyboard() const;
 	bool WantsToCaptureMouse() const;
@@ -44,10 +46,11 @@ public:
 
 private:
 
-	void DrawSettings();
+	void DrawSettings(const std::string& denoiserStatus);
 	void DrawOverlay(const Statistics& statistics);
 
 	std::unique_ptr<Vulkan::DescriptorPool> descriptorPool_;
 	std::unique_ptr<Vulkan::RenderPass> renderPass_;
 	UserSettings& userSettings_;
+	const std::vector<Vulkan::OIDNDeviceInfo>& oidnDevices_;
 };
